@@ -254,21 +254,30 @@ html.dark .doc-merge-group {
 @media (max-width: 1023px) {
   #rightToolsSidebar.mobile-sidebar-open {
     display: flex !important;
-    position: fixed;
-    top: 56px;
-    right: 0;
-    bottom: 0;
-    width: 300px;
-    max-width: 85vw;
-    z-index: 50;
-    background-color: #ffffff;
-    box-shadow: -10px 0 35px rgba(0, 0, 0, 0.15);
-    animation: slideInRight 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    position: fixed !important;
+    top: 64px !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    height: calc(100dvh - 64px) !important;
+    max-height: calc(100dvh - 64px) !important;
+    width: 320px !important;
+    max-width: 88vw !important;
+    z-index: 50 !important;
+    background-color: #ffffff !important;
+    box-shadow: -10px 0 35px rgba(0, 0, 0, 0.15) !important;
+    animation: slideInRight 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
   }
 
   html.dark #rightToolsSidebar.mobile-sidebar-open {
-    background-color: #121214 !important;
+    background-color: #0d0d0d !important;
     box-shadow: -10px 0 35px rgba(0, 0, 0, 0.6) !important;
+  }
+
+  /* Compact parameter composition on mobile to ensure export button is always visible */
+  #rightToolsSidebar.mobile-sidebar-open #sidebarParameterPanel {
+    padding: 12px 14px !important;
+    height: auto !important;
+    min-height: 240px !important;
   }
 }
 
