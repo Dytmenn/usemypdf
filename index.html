@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <title>usemypdf - Zero-Upload Client-Side PDF Suite</title>
+  
+  <meta name="description" content="usemypdf - Platform pengolah PDF 100% lokal di browser tanpa kirim file ke server. Gabungkan, pisahkan, kompres, dan konversi PDF dengan aman.">
+  <link rel="canonical" href="https://usemypdf.vercel.app">
+  
+  <!-- Open Graph & SEO Metadata -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://usemypdf.vercel.app">
+  <meta property="og:title" content="usemypdf - Zero-Upload Client-Side PDF Suite">
+  <meta property="og:description" content="Platform pengolah PDF 100% lokal di browser tanpa kirim file ke server. Gabungkan, pisahkan, kompres, dan konversi PDF dengan aman.">
+  <meta property="og:image" content="https://usemypdf.vercel.app/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="usemypdf - Zero-Upload Client-Side PDF Suite">
+  <meta name="twitter:description" content="Platform pengolah PDF 100% lokal di browser tanpa kirim file ke server.">
+  <meta name="twitter:image" content="https://usemypdf.vercel.app/og-image.png">
+
+  <!-- Static Pre-compiled Tailwind CSS (Zero Runtime Build Overhead) -->
+  <link rel="stylesheet" href="tailwind.min.css">
+
+  <!-- Pinned Lucide Icons CDN (v0.460.0 for stability & performance) -->
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+
+  <!-- PDF-Lib CDN (Client-side PDF manipulation) -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+  <!-- PDF.js CDN (Client-side PDF rendering & page extraction) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    // Configure PDF.js worker with safe fallback
+    if (window.pdfjsLib) {
+      try {
+        fetch('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js')
+          .then(res => res.blob())
+          .then(blob => {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+          })
+          .catch(() => {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          });
+      } catch (e) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+    }
+  </script>
+
+  <!-- JSZip CDN (For downloading multi-page images, docx packaging, or split files as ZIP) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <!-- Note: SheetJS (xlsx.full.min.js) is dynamically lazy-loaded on-demand when Excel tools are accessed -->
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Early Theme Initialization to Prevent Flash of Wrong Theme -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('usemypdf-theme') || 'dark';
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+</head>
+<body class="bg-white dark:bg-[#000000] text-zinc-900 dark:text-[#ededed] h-screen flex flex-col lg:flex-row antialiased selection:bg-zinc-800 selection:text-white dark:selection:bg-zinc-200 dark:selection:text-black overflow-hidden font-sans">
+
+  <!-- ========================================================================= -->
+  <!-- LEFT COLUMN: HEADER + MAIN STAGE -->
+  <!-- ========================================================================= -->
+  <div class="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
+    
+    <!-- Top Bar (Spacious Header with Clean Vercel Composition) -->
+    <header class="h-16 border-b border-zinc-200 dark:border-[#222222] bg-white dark:bg-[#000000] px-6 sm:px-8 flex items-center justify-between shrink-0 z-30">
+      
+      <!-- Left: Original usemypdf Logo & Name (Static Branding) -->
+      <div class="flex items-center space-x-3">
+        <div class="flex items-center space-x-2.5 select-none cursor-default">
+          <div class="w-8 h-8 rounded-lg bg-transparent text-zinc-900 dark:text-white flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+          </div>
+          <span class="text-sm font-bold tracking-tight text-zinc-900 dark:text-white leading-none">usemypdf</span>
+        </div>
+      </div>
+
+      <!-- Center: Floating Minimalist Search Input ONLY HERE -->
+      <div class="flex-1 max-w-md mx-6">
+        <div class="relative w-full">
+          <i data-lucide="search" class="w-4 h-4 text-zinc-400 dark:text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input 
+            type="text" 
+            id="globalSearchInput" 
+            placeholder="Search usemypdf tools..." 
+            class="w-full pl-9 pr-3.5 py-2 rounded-lg border border-zinc-200 dark:border-[#272727] bg-zinc-50 dark:bg-[#0d0d0d] text-xs text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-600 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-800 transition shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
+          >
+        </div>
+      </div>
+
+      <!-- Right: Privacy Guard, Theme Switcher Toggle & Mobile Tools Toggle -->
+      <div class="flex items-center space-x-1.5 sm:space-x-2">
+        <!-- Privacy Guard with SMS / Speech Bubble Popover -->
+        <div class="relative inline-flex items-center">
+          <button id="btnPrivacyInfo" class="p-2 rounded-lg text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] border border-zinc-200/80 dark:border-[#272727] transition tap-scale flex items-center justify-center" title="Informasi Privasi & Keamanan" aria-haspopup="true" aria-expanded="false">
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+          </button>
+
+          <!-- SMS / Balloon Popover Arrow Box (Styled in style.css, perfectly anchored) -->
+          <div id="privacyPopover" class="hidden text-left select-none">
+            <!-- Top pointing arrow (speech bubble pointer) -->
+            <div id="privacyPopoverArrow"></div>
+
+            <div class="relative z-10 space-y-2">
+              <div class="flex items-center space-x-1.5 pb-1.5 border-b border-zinc-100 dark:border-[#222222]">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-500 shrink-0"></i>
+                <span class="text-xs font-bold text-zinc-900 dark:text-white tracking-tight">Client-Side Privacy</span>
+              </div>
+              <p class="text-[11px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+                Seluruh pemrosesan berkas PDF dan Office berjalan langsung di perangkat Anda tanpa perantara server (Zero-Upload).
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dark / Light Mode Switcher Button -->
+        <button id="btnThemeToggle" class="p-2 rounded-lg text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] border border-zinc-200/80 dark:border-[#272727] transition tap-scale flex items-center justify-center" title="Ganti Tema (Dark / Light)">
+          <span id="themeIconSun" class="hidden flex items-center justify-center"><i data-lucide="sun" class="w-4 h-4 text-amber-500"></i></span>
+          <span id="themeIconMoon" class="flex items-center justify-center"><i data-lucide="moon" class="w-4 h-4"></i></span>
+        </button>
+
+        <!-- Mobile Right Sidebar Toggle (< lg) -->
+        <button id="btnToggleSidebarMobile" class="lg:hidden p-2 rounded-lg text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] border border-zinc-200 dark:border-[#272727] transition tap-scale" aria-label="Buka Daftar Alat">
+          <i data-lucide="layers" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+    </header>
+
+    <!-- Center Main Stage -->
+    <main class="flex-1 flex flex-col bg-white dark:bg-[#000000] overflow-y-auto relative p-4 sm:p-6 items-center" id="centerMainStage">
+      
+      <!-- STATE 1: WELCOME STATE (Minimalist Dropzone with Multi-Document Line Art) -->
+      <div id="welcomeState" class="flex-1 flex flex-col items-center justify-center w-full max-w-2xl mx-auto my-auto py-8 px-4">
+        
+        <!-- Dropzone Box (Exact match to reference image: dashed border, rounded corners, minimalist) -->
+        <div id="welcomeDropzoneBox" class="w-full rounded-2xl border-2 border-dashed border-zinc-300/80 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 bg-zinc-50/50 dark:bg-zinc-950/40 p-8 sm:p-12 flex flex-col items-center justify-center text-center transition-all duration-150 relative">
+          
+          <!-- Vector Multi-Document Stack Illustration -->
+          <div class="mb-6 flex items-center justify-center text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+            <svg class="w-20 h-16" viewBox="0 0 80 60" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <!-- Left Document (Table / Spreadsheet) -->
+              <g transform="translate(6, 10)">
+                <rect x="0" y="0" width="28" height="38" rx="2" class="fill-white dark:fill-[#0d0d0d]" stroke="currentColor"/>
+                <line x1="4" y1="10" x2="24" y2="10"/>
+                <line x1="4" y1="18" x2="24" y2="18"/>
+                <line x1="4" y1="26" x2="24" y2="26"/>
+                <line x1="4" y1="34" x2="24" y2="34"/>
+                <line x1="12" y1="10" x2="12" y2="34"/>
+              </g>
+
+              <!-- Right Document (Pie Chart) -->
+              <g transform="translate(46, 10)">
+                <rect x="0" y="0" width="28" height="38" rx="2" class="fill-white dark:fill-[#0d0d0d]" stroke="currentColor"/>
+                <circle cx="14" cy="20" r="7"/>
+                <path d="M14 13v7h7"/>
+                <line x1="5" y1="32" x2="23" y2="32"/>
+              </g>
+
+              <!-- Center Document (PDF in front) -->
+              <g transform="translate(24, 2)">
+                <rect x="0" y="0" width="32" height="46" rx="2.5" class="fill-white dark:fill-[#000000]" stroke="currentColor"/>
+                <path d="M22 0v8h8"/>
+                <rect x="5" y="15" width="22" height="12" rx="2" stroke="currentColor" stroke-width="1.2"/>
+                <text x="16" y="24" font-size="7.5" font-weight="bold" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" text-anchor="middle" fill="currentColor" stroke="none" letter-spacing="0.5">PDF</text>
+                <line x1="5" y1="33" x2="27" y2="33"/>
+                <line x1="5" y1="39" x2="20" y2="39"/>
+              </g>
+            </svg>
+          </div>
+
+          <!-- Split Action Button (CHOOSE FILES + Chevron) -->
+          <div class="relative inline-flex items-center mb-5" id="welcomeCtaWrapper">
+            <div class="inline-flex items-stretch rounded-lg bg-[#212124] dark:bg-white text-white dark:text-zinc-900 shadow-sm hover:shadow-md transition overflow-hidden">
+              <!-- Primary Choose Files Button -->
+              <button id="btnCenterAddFiles" type="button" class="px-5 py-2.5 flex items-center space-x-2 text-xs font-bold tracking-wider uppercase hover:bg-black dark:hover:bg-zinc-200 transition-colors tap-scale">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+                <span>CHOOSE FILES</span>
+              </button>
+
+              <!-- Divider -->
+              <div class="w-[1px] bg-zinc-700 dark:bg-zinc-200"></div>
+
+              <!-- Chevron Dropdown Toggle -->
+              <button id="btnCenterChevron" type="button" class="px-3 flex items-center justify-center hover:bg-black dark:hover:bg-zinc-200 text-white dark:text-zinc-900 transition-colors tap-scale" title="More options" aria-haspopup="true" aria-expanded="false">
+                <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+
+            <!-- Dropdown Popover Menu -->
+            <div id="welcomeDropdownMenu" class="hidden absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 py-1 bg-white dark:bg-[#141414] border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl z-30 text-left">
+              <button id="btnDropdownChooseFiles" type="button" class="w-full px-3 py-2 text-xs text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-[#1f1f1f] flex items-center space-x-2 transition-colors">
+                <i data-lucide="file" class="w-3.5 h-3.5 text-zinc-400"></i>
+                <span>Choose Files</span>
+              </button>
+              <button id="btnDropdownChooseFolder" type="button" class="w-full px-3 py-2 text-xs text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-[#1f1f1f] flex items-center space-x-2 transition-colors">
+                <i data-lucide="folder" class="w-3.5 h-3.5 text-zinc-400"></i>
+                <span>Select Folder</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Drag and Drop Guide Text -->
+          <div class="flex flex-col items-center space-y-1 text-center pointer-events-none">
+            <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              or drop files here
+            </span>
+            <span class="text-[11px] text-zinc-400 dark:text-zinc-500">
+              100% client-side in browser RAM • Zero server upload
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- STATE 2: ACTIVE DOCUMENT WORKSPACE (Live PDF Pages Canvas Grid - Exactly 6 Per Row) -->
+      <div id="workspaceState" class="hidden flex-1 flex flex-col w-full max-w-7xl mx-auto px-2 sm:px-4">
+        
+        <!-- Document Header Bar -->
+        <div class="w-full flex items-center justify-between pb-3 mb-4 border-b border-zinc-200 dark:border-[#222222]">
+          <div class="flex items-center space-x-3">
+            <div id="activeToolIconBadge" class="w-7 h-7 rounded-md flex items-center justify-center border border-zinc-200 dark:border-[#222222] bg-zinc-50 dark:bg-[#111111] text-zinc-900 dark:text-white shadow-2xs">
+              <i data-lucide="scissors" class="w-3.5 h-3.5"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span id="activeDocTitle" class="text-xs font-bold text-zinc-900 dark:text-white max-w-[220px] sm:max-w-md truncate">document.pdf</span>
+                <span id="activeDocPageCount" class="text-[10px] px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-[#161616] text-zinc-600 dark:text-zinc-400 font-mono border border-zinc-200 dark:border-[#272727]">Page Preview</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <button id="btnAddMoreFiles" class="hidden px-2.5 py-1.5 rounded-md text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white bg-white dark:bg-[#111111] hover:bg-zinc-50 dark:hover:bg-[#1a1a1a] border border-zinc-200 dark:border-[#272727] transition items-center space-x-1 tap-scale shadow-2xs">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Add Files</span>
+            </button>
+            <button id="btnChangeFile" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 transition tap-scale flex items-center space-x-1" title="Remove current file">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              <span>Remove File</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Rendered Page Thumbnails Container (Live PDF.js preview for all tools) -->
+        <div id="pagesThumbnailsGrid" class="w-full space-y-6 p-1 pr-3">
+          <!-- Dynamically populated with visual preview cards for each loaded PDF or image -->
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ----------------------------------------------------------------------- -->
+  <!-- RIGHT SIDEBAR (PDF Processor & PDF Tools - Spacious Minimalist Layout)   -->
+  <!-- ----------------------------------------------------------------------- -->
+  <aside id="rightToolsSidebar" class="hidden lg:flex w-72 xl:w-80 h-screen border-t lg:border-t-0 lg:border-l border-zinc-200 dark:border-[#222222] bg-white dark:bg-[#000000] flex-col justify-between shrink-0 z-40 overflow-hidden select-none transition-colors duration-150">
+      
+      <!-- Upper Section: Categorized Tools (Spacious, Generous Whitespace, Smooth Scroll) -->
+      <div class="flex-1 flex flex-col overflow-y-auto no-scrollbar p-5 space-y-4">
+        
+        <!-- Sleek Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-[#222222] shrink-0">
+          <span class="text-xs font-bold text-zinc-900 dark:text-white tracking-tight">PDF Tools</span>
+        </div>
+
+        <!-- Tools Categorized List (Clean & Spacious Vercel Rows) -->
+        <div class="space-y-4" id="sidebarToolsContainer">
+          
+          <!-- Category: RECOMMENDED -->
+          <div class="space-y-1 tool-category-block" data-category="organize">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 px-1 mb-1.5">
+              RECOMMENDED
+            </div>
+            
+            <button class="tool-list-item active w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] flex items-center space-x-2.5 transition" data-tool-id="split" data-keywords="split pisah potong pecah">
+              <i data-lucide="scissors" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 stroke-[1.6]"></i>
+              <span>Split</span>
+            </button>
+
+            <button class="tool-list-item w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] flex items-center space-x-2.5 transition" data-tool-id="merge" data-keywords="merge gabung combine sambung">
+              <i data-lucide="folder-plus" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 stroke-[1.6]"></i>
+              <span>Merge</span>
+            </button>
+
+            <button class="tool-list-item w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] flex items-center space-x-2.5 transition" data-tool-id="compress" data-keywords="compress kompres perkecil kecil">
+              <i data-lucide="minimize-2" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 stroke-[1.6]"></i>
+              <span>Compress</span>
+            </button>
+
+            <button class="tool-list-item w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] flex items-center space-x-2.5 transition" data-tool-id="organize" data-keywords="organize atur putar rotate urut">
+              <i data-lucide="layout-grid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 stroke-[1.6]"></i>
+              <span>Organize & Rotate</span>
+            </button>
+
+            <button class="tool-list-item w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] flex items-center space-x-2.5 transition" data-tool-id="delete-pages" data-keywords="delete hapus buang remove">
+              <i data-lucide="file-minus" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 stroke-[1.6]"></i>
+              <span>Remove pages</span>
+            </button>
+          </div>
+
+          <!-- Category: CONVERT TO PDF -->
+          <div class="space-y-1 tool-category-block" data-category="to-pdf">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 px-1 mb-1.5 mt-4">
+              CONVERT TO PDF
+            </div>
+
+            <button class="tool-list-item w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] flex items-center space-x-2.5 transition" data-tool-id="jpg-to-pdf" data-keywords="jpg jpeg png webp gambar to pdf">
+              <i data-lucide="image" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 stroke-[1.6]"></i>
+              <span>JPG to PDF</span>
+            </button>
+
+            <button class="tool-list-item w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] flex items-center space-x-2.5 transition" data-tool-id="word-to-pdf" data-keywords="word doc docx to pdf">
+              <i data-lucide="file-text" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 stroke-[1.6]"></i>
+              <span>WORD to PDF</span>
+            </button>
+
+            <button class="tool-list-item w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] flex items-center space-x-2.5 transition" data-tool-id="excel-to-pdf" data-keywords="excel xls xlsx spreadsheet to pdf">
+              <i data-lucide="sheet" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 stroke-[1.6]"></i>
+              <span>EXCEL to PDF</span>
+            </button>
+
+            <button class="tool-list-item w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] flex items-center space-x-2.5 transition" data-tool-id="ppt-to-pdf" data-keywords="powerpoint ppt pptx to pdf presentasi">
+              <i data-lucide="presentation" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 stroke-[1.6]"></i>
+              <span>POWERPOINT to PDF</span>
+            </button>
+          </div>
+
+          <!-- Category: CONVERT FROM PDF -->
+          <div class="space-y-1 tool-category-block" data-category="from-pdf">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 px-1 mb-1.5 mt-4">
+              CONVERT FROM PDF
+            </div>
+
+            <button class="tool-list-item w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] flex items-center space-x-2.5 transition" data-tool-id="pdf-to-jpg" data-keywords="pdf to jpg jpeg png gambar foto">
+              <i data-lucide="file-image" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 stroke-[1.6]"></i>
+              <span>PDF to JPG</span>
+            </button>
+
+            <button class="tool-list-item w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] flex items-center space-x-2.5 transition" data-tool-id="pdf-to-word" data-keywords="pdf to word doc docx dokumen">
+              <i data-lucide="file-edit" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 stroke-[1.6]"></i>
+              <span>PDF to WORD</span>
+            </button>
+
+            <button class="tool-list-item w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] flex items-center space-x-2.5 transition" data-tool-id="pdf-to-excel" data-keywords="pdf to excel xls xlsx tabel">
+              <i data-lucide="table" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 stroke-[1.6]"></i>
+              <span>PDF to EXCEL</span>
+            </button>
+
+            <button class="tool-list-item w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#141414] flex items-center space-x-2.5 transition" data-tool-id="pdf-to-ppt" data-keywords="pdf to powerpoint ppt pptx slide">
+              <i data-lucide="projector" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 stroke-[1.6]"></i>
+              <span>PDF to POWERPOINT</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Lower Section: Active Tool Parameters (LOCKED & STANDARDIZED HEIGHT: h-[280px]) -->
+      <div id="sidebarParameterPanel" class="p-4 sm:p-5 border-t border-zinc-200 dark:border-[#222222] bg-[#fafafa] dark:bg-[#0a0a0a] shrink-0 h-[280px] flex flex-col justify-between">
+        
+        <!-- Top part of Parameter Panel: Single clean title on right (Gambar 1 fix) -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between pb-1.5 border-b border-zinc-200/80 dark:border-zinc-800/80">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Parameter</span>
+            <span id="sidebarActiveToolBadge" class="text-xs font-bold text-zinc-900 dark:text-white font-mono truncate max-w-[190px] text-right">Split PDF</span>
+          </div>
+
+          <!-- Dynamic Tool Options (Consistent ~140px working height) -->
+          <div id="toolOptionsSection" class="min-h-[140px] flex flex-col justify-center text-xs">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Bottom part of Parameter Panel: In-Button Progress (Gambar 3 fix - Zero Shift) -->
+        <div class="pt-2">
+          <!-- Process Button (Solid High-Contrast CTA with In-Button Animated Progress Fill) -->
+          <button id="btnProcessTool" disabled class="relative overflow-hidden w-full h-11 rounded-lg text-xs font-semibold bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-black text-white disabled:opacity-30 disabled:hover:bg-black dark:disabled:hover:bg-white transition flex items-center justify-center space-x-1.5 tap-scale cursor-pointer disabled:cursor-not-allowed shadow-xs select-none">
+            <!-- In-Button Progress Fill Layer -->
+            <div id="btnProgressBar" class="absolute inset-y-0 left-0 bg-zinc-600/30 dark:bg-zinc-400/35 w-0 transition-all duration-100 pointer-events-none"></div>
+            <span id="btnProcessText" class="relative z-10 font-semibold truncate px-2">Choose Files</span>
+            <i data-lucide="arrow-right" id="btnProcessIcon" class="w-3.5 h-3.5 relative z-10 shrink-0"></i>
+          </button>
+        </div>
+
+      </div>
+
+    </aside>
+
+  <!-- Hidden native file input -->
+  <input type="file" id="fileInput" class="hidden" multiple accept="application/pdf,image/png,image/jpeg,image/webp">
+  <input type="file" id="folderInput" class="hidden" webkitdirectory directory multiple>
+
+  <!-- Application Modules -->
+  <script src="js/pdf-organize.js"></script>
+  <script src="js/pdf-convert.js"></script>
+  <script src="js/pdf-optimize.js"></script>
+  <script src="js/pdf-office.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,549 @@
+/* ==========================================================================
+   usemypdf - Ultra-Minimalist Styling (Dark / Light Dual Workspace)
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #fbfbfc;
+  color: #1f2937;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Dark Mode Body & Root Overrides (Vercel True Black) */
+html.dark body {
+  background-color: #000000;
+  color: #ededed;
+}
+
+/* Subtle Minimalist Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #27272a;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Lightweight Fast Click Feedback (Satset, zero-lag) */
+.tap-scale {
+  transition: opacity 0.05s ease, background-color 0.05s ease, border-color 0.05s ease;
+}
+
+.tap-scale:active {
+  opacity: 0.85;
+}
+
+/* Glassmorphism modal backdrop */
+.modal-backdrop {
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+html.dark .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* SMS / Speech Bubble Popover (100% Client-Side Privacy Indicator) */
+#privacyPopover {
+  position: absolute;
+  top: calc(100% + 9px);
+  right: -6px;
+  width: 275px;
+  z-index: 60;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background-color: #ffffff;
+  border: 1px solid #e4e4e7;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
+}
+
+html.dark #privacyPopover {
+  background-color: #111111;
+  border-color: #272727;
+  box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.8), 0 8px 12px -6px rgba(0, 0, 0, 0.6);
+}
+
+#privacyPopoverArrow {
+  position: absolute;
+  top: -6px;
+  right: 19px;
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  background-color: #ffffff;
+  border-top: 1px solid #e4e4e7;
+  border-left: 1px solid #e4e4e7;
+}
+
+html.dark #privacyPopoverArrow {
+  background-color: #111111;
+  border-top-color: #272727;
+  border-left-color: #272727;
+}
+
+/* Dropzone dragover state */
+.dropzone-active {
+  background-color: #f1f5f9 !important;
+}
+
+html.dark .dropzone-active {
+  background-color: #18181b !important;
+}
+
+.dropzone-active #welcomeDropzoneBox {
+  border-color: #18181b !important;
+  background-color: rgba(244, 244, 245, 0.9) !important;
+}
+
+html.dark .dropzone-active #welcomeDropzoneBox {
+  border-color: #e4e4e7 !important;
+  background-color: rgba(24, 24, 27, 0.8) !important;
+}
+
+/* Ultra-Lightweight Page Thumbnail Card (0px layout shift, 0 blur lag) */
+.page-thumbnail-card {
+  transition: border-color 0.05s ease;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  width: 100%;
+}
+
+.page-thumbnail-card canvas {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block !important;
+  margin: 0 auto !important;
+}
+
+.page-thumbnail-card:hover {
+  border-color: #71717a;
+}
+
+.page-thumbnail-card.selected {
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25) !important;
+}
+
+.page-thumbnail-card.to-delete {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.35) !important;
+  opacity: 0.55;
+  filter: grayscale(40%);
+}
+
+html.dark .page-thumbnail-card {
+  background-color: #0d0d0d;
+  border-color: #222222;
+}
+
+html.dark .page-thumbnail-card:hover {
+  border-color: #52525b;
+}
+
+html.dark .page-thumbnail-card.selected {
+  border-color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4), 0 0 12px rgba(255, 255, 255, 0.15) !important;
+}
+
+html.dark .page-thumbnail-card.to-delete {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* Tool list items in right sidebar (High-Contrast Vercel Active Selection - Line Border Only) */
+.tool-list-item {
+  transition: background-color 0.05s ease, color 0.05s ease, border-color 0.05s ease;
+  user-select: none;
+}
+
+.tool-list-item:hover {
+  background-color: #f4f4f5;
+  color: #000000;
+}
+
+.tool-list-item.active {
+  background-color: transparent !important;
+  color: #000000 !important;
+  font-weight: 600;
+  border: 1.5px solid #000000 !important;
+}
+
+.tool-list-item.active i {
+  color: #000000 !important;
+}
+
+html.dark .tool-list-item:hover {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+html.dark .tool-list-item.active {
+  background-color: transparent !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  border: 1.5px solid #ffffff !important;
+}
+
+html.dark .tool-list-item.active i {
+  color: #ffffff !important;
+}
+
+/* Locked tool items for incompatible active file types */
+.tool-list-item.locked {
+  opacity: 0.3 !important;
+  cursor: not-allowed !important;
+  filter: grayscale(70%);
+}
+
+.tool-list-item.locked:hover {
+  background-color: transparent !important;
+  color: inherit !important;
+  border-color: transparent !important;
+}
+
+html.dark .tool-list-item.locked:hover {
+  background-color: transparent !important;
+  color: inherit !important;
+  border-color: transparent !important;
+}
+
+/* Document Group Card in Merge view */
+.doc-merge-group {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+html.dark .doc-merge-group {
+  background-color: #121214;
+  border-color: #27272a;
+}
+
+/* Mobile Sidebar Drawer (< lg) */
+@media (max-width: 1023px) {
+  #rightToolsSidebar.mobile-sidebar-open {
+    display: flex !important;
+    position: fixed;
+    top: 56px;
+    right: 0;
+    bottom: 0;
+    width: 300px;
+    max-width: 85vw;
+    z-index: 50;
+    background-color: #ffffff;
+    box-shadow: -10px 0 35px rgba(0, 0, 0, 0.15);
+    animation: slideInRight 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  html.dark #rightToolsSidebar.mobile-sidebar-open {
+    background-color: #121214 !important;
+    box-shadow: -10px 0 35px rgba(0, 0, 0, 0.6) !important;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* ==========================================================================
+   Gambar 1: Merge PDF Draggable Cards & Top-Right Delete Button (Lightweight)
+   ========================================================================== */
+.merge-drag-card {
+  position: relative;
+  transition: border-color 0.05s ease, opacity 0.05s ease;
+  user-select: none;
+  cursor: grab;
+}
+
+.merge-drag-card:active {
+  cursor: grabbing;
+}
+
+.merge-drag-card.dragging {
+  opacity: 0.4;
+  border-style: dashed !important;
+}
+
+.merge-drag-card.drag-over {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4) !important;
+}
+
+.card-close-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.05s ease, color 0.05s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+.card-close-btn:hover {
+  background-color: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+html.dark .card-close-btn {
+  background-color: #27272a;
+  border-color: #3f3f46;
+  color: #a1a1aa;
+}
+
+html.dark .card-close-btn:hover {
+  background-color: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+/* Tooltip Badge for Document Info */
+.doc-info-tooltip {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1e293b;
+  color: #f8fafc;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.05s ease;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  z-index: 15;
+}
+
+.merge-drag-card:hover .doc-info-tooltip {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Gambar 2: Compression Level Radio Cards
+   ========================================================================== */
+.compression-radio-card {
+  transition: border-color 0.05s ease;
+  border: 1.5px solid #e2e8f0;
+  background-color: #ffffff;
+  cursor: pointer;
+}
+
+.compression-radio-card:hover {
+  border-color: #cbd5e1;
+}
+
+.compression-radio-card.active {
+  border-color: #000000 !important;
+  border-width: 1.5px !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html.dark .compression-radio-card {
+  border-color: #27272a;
+  background-color: #0a0a0a;
+}
+
+html.dark .compression-radio-card:hover {
+  border-color: #444444;
+}
+
+html.dark .compression-radio-card.active {
+  border-color: #ffffff !important;
+  border-width: 1.5px !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* High-Contrast Active Markers for Segmented Selection Pills (Line Border Only, No Solid Fill) */
+.split-mode-card.active,
+.quality-card.active,
+.format-card.active {
+  border-color: #000000 !important;
+  border-width: 1.5px !important;
+  background-color: transparent !important;
+  color: #000000 !important;
+  font-weight: 600;
+  box-shadow: none !important;
+}
+
+html.dark .split-mode-card.active,
+html.dark .quality-card.active,
+html.dark .format-card.active {
+  border-color: #ffffff !important;
+  border-width: 1.5px !important;
+  background-color: transparent !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   Locked / Inaccessible Parameter Options (Before file is active)
+   ========================================================================== */
+.parameters-locked {
+  opacity: 0.38 !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  cursor: not-allowed !important;
+}
+
+.parameters-locked * {
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+}
+
+/* ==========================================================================
+   Gambar 3: Split PDF Scissor Split Divider (Full Width 6-Col Grid Matching All Features)
+   ========================================================================== */
+.split-grid-cell {
+  position: relative;
+  width: 100%;
+}
+
+.split-divider-col {
+  position: absolute;
+  top: 8px;
+  bottom: 22px;
+  left: calc(100% + 8px);
+  transform: translateX(-50%);
+  width: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  cursor: pointer;
+  user-select: none;
+}
+
+.split-divider-col.hidden {
+  display: none !important;
+}
+
+.split-divider-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  border-left: 2px dashed #cbd5e1;
+  transition: border-color 0.08s ease;
+}
+
+.split-divider-col:hover .split-divider-line {
+  border-left-color: #000000;
+}
+
+.split-divider-col.active .split-divider-line {
+  border-left: 2px dashed #000000 !important;
+  opacity: 1;
+}
+
+html.dark .split-divider-line {
+  border-left-color: #334155;
+}
+
+html.dark .split-divider-col:hover .split-divider-line {
+  border-left-color: #ffffff;
+}
+
+html.dark .split-divider-col.active .split-divider-line {
+  border-left-color: #ffffff !important;
+}
+
+.split-scissor-btn {
+  position: relative;
+  z-index: 5;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.05s ease, color 0.05s ease, border-color 0.05s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.split-divider-col:hover .split-scissor-btn {
+  background-color: #f4f4f5;
+  color: #000000;
+  border-color: #000000;
+}
+
+.split-divider-col.active .split-scissor-btn {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1.5px solid #000000 !important;
+  box-shadow: none !important;
+}
+
+html.dark .split-scissor-btn {
+  background-color: #0d0d0d;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+html.dark .split-divider-col:hover .split-scissor-btn {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+html.dark .split-divider-col.active .split-scissor-btn {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+  border: 1.5px solid #ffffff !important;
+  box-shadow: none !important;
+}
+}

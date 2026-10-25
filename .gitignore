@@ -1,0 +1,17 @@
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# AI Agent Prompt / Rules
+GEMINI.md
+
+# Temporary & Binaries
+temp_*
+*.tmp
+*.log
+*.exe
+
+# Dependencies
+node_modules/
