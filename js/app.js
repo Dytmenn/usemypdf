@@ -78,7 +78,8 @@ const TOOL_CONFIGS = {
     accept: '.docx,.doc',
     multiple: true,
     minFiles: 1,
-    buttonText: 'Convert to PDF'
+    buttonText: 'Convert to PDF',
+    comingSoon: true
   },
   'ppt-to-pdf': {
     title: 'POWERPOINT to PDF',
@@ -88,7 +89,8 @@ const TOOL_CONFIGS = {
     accept: '.pptx,.ppt',
     multiple: true,
     minFiles: 1,
-    buttonText: 'Convert to PDF'
+    buttonText: 'Convert to PDF',
+    comingSoon: true
   },
   'excel-to-pdf': {
     title: 'EXCEL to PDF',
@@ -98,7 +100,8 @@ const TOOL_CONFIGS = {
     accept: '.xlsx,.xls',
     multiple: true,
     minFiles: 1,
-    buttonText: 'Convert to PDF'
+    buttonText: 'Convert to PDF',
+    comingSoon: true
   },
 
   // KONVERSI DARI PDF
@@ -316,11 +319,11 @@ function getActiveFileCategory() {
 }
 
 function isToolCompatibleWithCategory(toolId, category) {
+  const config = TOOL_CONFIGS[toolId];
+  if (!config || config.comingSoon) return false;
   if (category === 'none') {
     return true; // No file opened: all tools freely accessible
   }
-  const config = TOOL_CONFIGS[toolId];
-  if (!config) return true;
 
   if (category === 'pdf') {
     return config.accept === '.pdf';
@@ -343,7 +346,7 @@ function isToolCompatibleWithCategory(toolId, category) {
 
 function isFileAcceptedByTool(file, toolId) {
   const config = TOOL_CONFIGS[toolId];
-  if (!config) return false;
+  if (!config || config.comingSoon) return false;
 
   const ext = file.name.split('.').pop().toLowerCase();
 
@@ -370,7 +373,7 @@ function isDragDataCompatibleWithTool(dataTransfer, toolId) {
   if (!dataTransfer) return true;
 
   const config = TOOL_CONFIGS[toolId];
-  if (!config) return true;
+  if (!config || config.comingSoon) return false;
 
   // Inspect dataTransfer.items if available
   if (dataTransfer.items && dataTransfer.items.length > 0) {
@@ -423,7 +426,9 @@ function updateSidebarToolLocks() {
 
   elements.toolListItems.forEach(item => {
     const toolId = item.dataset.toolId;
-    const compatible = isToolCompatibleWithCategory(toolId, category);
+    const config = TOOL_CONFIGS[toolId];
+    const isComingSoon = !!(config && config.comingSoon);
+    const compatible = !isComingSoon && isToolCompatibleWithCategory(toolId, category);
     let lockIcon = item.querySelector('.tool-lock-indicator');
 
     if (compatible) {
@@ -436,7 +441,11 @@ function updateSidebarToolLocks() {
     } else {
       item.classList.add('locked');
       item.setAttribute('aria-disabled', 'true');
-      item.title = `Fitur ini terkunci untuk dokumen ${category.toUpperCase()} yang sedang aktif.`;
+      if (isComingSoon) {
+        item.title = 'Coming Soon';
+      } else {
+        item.title = `Fitur ini terkunci untuk dokumen ${category.toUpperCase()} yang sedang aktif.`;
+      }
 
       if (!lockIcon) {
         lockIcon = document.createElement('span');
@@ -459,12 +468,13 @@ function updateSidebarToolLocks() {
 function setupSidebarToolSelection() {
   elements.toolListItems.forEach(item => {
     item.addEventListener('click', () => {
-      // Guard: If tool is locked for the current file type, block selection!
-      if (item.classList.contains('locked')) {
+      // Guard: If tool is locked or coming soon, block selection!
+      const toolId = item.dataset.toolId;
+      const config = TOOL_CONFIGS[toolId];
+      if (item.classList.contains('locked') || (config && config.comingSoon)) {
         return;
       }
 
-      const toolId = item.dataset.toolId;
       setActiveTool(toolId);
       
       // On mobile, close sidebar after picking tool
@@ -486,7 +496,7 @@ function setupSidebarToolSelection() {
 
 function setActiveTool(toolId) {
   const config = TOOL_CONFIGS[toolId];
-  if (!config) return;
+  if (!config || config.comingSoon) return;
 
   state.activeToolId = toolId;
 
