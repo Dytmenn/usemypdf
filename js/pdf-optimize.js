@@ -17,7 +17,7 @@ function formatBytes(bytes) {
 // KOMPRES PDF (COMPRESS) - DUAL-TIER ADAPTIVE ENGINE
 // =============================================================================
 async function handleCompressPDF({ files, updateProgress, showToast }) {
-  if (!files || files.length === 0) throw new Error('Pilih 1 berkas PDF untuk dikompresi.');
+  if (!files || files.length === 0) throw new Error('Please select 1 PDF file to compress.');
   const file = files[0];
   const originalSize = file.size;
 
@@ -26,13 +26,13 @@ async function handleCompressPDF({ files, updateProgress, showToast }) {
   const rangeInput = document.getElementById('compressQualityRange');
   const level = checkedRadio ? parseInt(checkedRadio.value, 10) : (rangeInput ? parseInt(rangeInput.value, 10) : 2);
 
-  updateProgress(10, 'Menganalisis lembaran dokumen...');
+  updateProgress(10, 'Analyzing document pages...');
   const arrayBuffer = await file.arrayBuffer();
 
   // ---------------------------------------------------------------------------
   // PASS 1: Lossless Structural & Stream Optimization Candidate
   // ---------------------------------------------------------------------------
-  updateProgress(20, 'Mengoptimalkan stream objek & struktur dokumen...');
+  updateProgress(20, 'Optimizing PDF object streams & structure...');
   let structBytes = null;
   try {
     const docStruct = await PDFLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
@@ -85,7 +85,7 @@ async function handleCompressPDF({ files, updateProgress, showToast }) {
     const newPdf = await PDFLib.PDFDocument.create();
     for (let pageNum = 1; pageNum <= numPages; pageNum++) {
       const pPercent = Math.round(progressStart + (pageNum / numPages) * (progressEnd - progressStart));
-      updateProgress(pPercent, `Mengompresi halaman ${pageNum} dari ${numPages}...`);
+      updateProgress(pPercent, `Compressing page ${pageNum} of ${numPages}...`);
 
       const page = await pdfDocument.getPage(pageNum);
       const viewport = page.getViewport({ scale });
@@ -119,7 +119,7 @@ async function handleCompressPDF({ files, updateProgress, showToast }) {
     return await newPdf.save({ useObjectStreams: true, addDefaultPage: false });
   }
 
-  updateProgress(25, `Mempersiapkan kompresi untuk ${numPages} halaman...`);
+  updateProgress(25, `Preparing compression for ${numPages} page(s)...`);
   let visualBytes = await renderCompressedPdf(baseScale, baseQuality, 30, 80);
 
   // ---------------------------------------------------------------------------
@@ -132,7 +132,7 @@ async function handleCompressPDF({ files, updateProgress, showToast }) {
   let curQuality = baseQuality;
   while (visualBytes.length >= originalSize && autoRetries < 2) {
     autoRetries++;
-    updateProgress(82, 'Menyesuaikan resolusi untuk optimasi ukuran maksimal...');
+    updateProgress(82, 'Refining resolution for maximum size optimization...');
     curScale = Math.max(0.65, curScale * 0.82);
     curQuality = Math.max(0.32, curQuality * 0.78);
     visualBytes = await renderCompressedPdf(curScale, curQuality, 82, 88);
@@ -142,7 +142,7 @@ async function handleCompressPDF({ files, updateProgress, showToast }) {
   // CANDIDATE SELECTION:
   // Choose the candidate that guarantees size reduction and respects user level
   // ---------------------------------------------------------------------------
-  updateProgress(90, 'Memverifikasi hasil kompresi berkas...');
+  updateProgress(90, 'Verifying compressed file size...');
 
   const validCandidates = [];
   if (structBytes && structBytes.length < originalSize) {
@@ -172,7 +172,7 @@ async function handleCompressPDF({ files, updateProgress, showToast }) {
   } else {
     // Failsafe: if neither candidate was smaller (e.g. ultra-compact small vector PDF)
     // Run an emergency downscale pass to force reduction
-    updateProgress(92, 'Mengoptimalkan pemadatan berkas...');
+    updateProgress(92, 'Optimizing file compactness...');
     const emergencyBytes = await renderCompressedPdf(0.70, 0.35, 92, 95);
     if (emergencyBytes.length < originalSize) {
       finalCandidate = { type: 'emergency_visual', bytes: emergencyBytes, size: emergencyBytes.length };
@@ -188,9 +188,9 @@ async function handleCompressPDF({ files, updateProgress, showToast }) {
   const finalSize = finalCandidate.size;
 
   // Prepare download
-  updateProgress(96, 'Mengemas berkas PDF hasil kompresi...');
+  updateProgress(96, 'Packaging compressed PDF file...');
   const baseName = file.name.replace(/\.[^/.]+$/, '');
-  const outFilename = `${baseName}_usemypdf_kompres.pdf`;
+  const outFilename = `${baseName}_compressed.pdf`;
 
   window.downloadFile(finalBytes, outFilename);
 
@@ -200,12 +200,12 @@ async function handleCompressPDF({ files, updateProgress, showToast }) {
   const savedBytes = originalSize - finalSize;
   const savedPercent = originalSize > 0 ? Math.max(0, Math.round((savedBytes / originalSize) * 100)) : 0;
 
-  updateProgress(100, `Selesai! Dari ${origFormatted} menjadi ${compFormatted}`);
+  updateProgress(100, `Done! Reduced from ${origFormatted} to ${compFormatted}`);
 
   if (savedPercent > 0) {
-    showToast(`Kompresi berhasil! Ukuran hemat ${savedPercent}% (${origFormatted} → ${compFormatted})`, 'success');
+    showToast(`Compression complete! Saved ${savedPercent}% (${origFormatted} → ${compFormatted})`, 'success');
   } else {
-    showToast(`Dokumen berhasil dioptimalkan (${compFormatted})!`, 'success');
+    showToast(`Document optimized successfully (${compFormatted})!`, 'success');
   }
 }
 

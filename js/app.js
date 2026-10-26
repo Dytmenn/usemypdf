@@ -713,7 +713,7 @@ async function handleIncomingFiles(fileList) {
   const MAX_FILE_SIZE = 100 * 1024 * 1024;
   const oversized = incoming.find(f => f.size > MAX_FILE_SIZE);
   if (oversized) {
-    showToast(`Batas ukuran berkas maksimal 100MB per berkas untuk stabilitas browser.`, 'error');
+    showToast(`Maximum file size is 100MB per file for browser stability.`, 'error');
     return;
   }
 
@@ -735,7 +735,7 @@ async function handleIncomingFiles(fileList) {
   }
 
   showWorkspaceState();
-  showToast(`${state.selectedFiles.length} berkas berhasil dimuat di memori RAM`, 'info');
+  showToast(`${state.selectedFiles.length} file(s) loaded into browser memory`, 'info');
 }
 
 // Canvas Memory Leak Guard: Reclaim GPU / RAM resources before clearing
@@ -1143,7 +1143,7 @@ async function renderDocumentCardsWorkspace() {
     // Top-right 'X' delete button
     const closeBtn = document.createElement('button');
     closeBtn.className = 'card-close-btn tap-scale';
-    closeBtn.title = 'Hapus berkas ini';
+    closeBtn.title = 'Remove this file';
     closeBtn.innerHTML = `<i data-lucide="x" class="w-3.5 h-3.5"></i>`;
     closeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1234,7 +1234,7 @@ async function renderDocumentCardsWorkspace() {
         previewContainer.innerHTML = '';
         previewContainer.appendChild(canvas);
       } catch (err) {
-        console.warn('Gagal pratinjau lembar 1:', err);
+        console.warn('Failed to preview page 1:', err);
         previewContainer.innerHTML = `<span class="text-[10px] text-zinc-400 text-center p-2">PDF Document</span>`;
       }
     })();
@@ -1245,7 +1245,7 @@ async function renderDocumentCardsWorkspace() {
     const addBtnCol = document.createElement('div');
     addBtnCol.className = 'flex flex-col items-center justify-center p-4';
     addBtnCol.innerHTML = `
-      <button onclick="document.getElementById('fileInput').click()" class="w-12 h-12 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center shadow-md transition tap-scale hover:scale-105" title="Tambah Berkas PDF">
+      <button onclick="document.getElementById('fileInput').click()" class="w-12 h-12 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center shadow-md transition tap-scale hover:scale-105" title="Add PDF File">
         <i data-lucide="plus" class="w-6 h-6"></i>
       </button>
     `;
@@ -1264,7 +1264,7 @@ window.reorderMergeFiles = function(fromIdx, toIdx) {
   const moved = state.selectedFiles.splice(fromIdx, 1)[0];
   state.selectedFiles.splice(toIdx, 0, moved);
   renderWorkspaceCanvas();
-  showToast('Urutan dokumen berhasil diubah', 'info');
+  showToast('Document order updated', 'info');
 };
 
 // 3. Images Visual Preview Grid (for jpg-to-pdf)
@@ -1386,8 +1386,8 @@ function renderOfficeDocWorkspace() {
 function renderGenericFallback(errMsg) {
   elements.pagesThumbnailsGrid.innerHTML = `
     <div class="w-full max-w-md mx-auto text-center py-8 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121214]">
-      <div class="text-xs font-semibold text-zinc-800 dark:text-zinc-200">${state.selectedFiles.length} Berkas Siap Diproses</div>
-      <div class="text-[11px] text-zinc-400 mt-1">${errMsg || 'Pratinjau visual selesai disiapkan'}</div>
+      <div class="text-xs font-semibold text-zinc-800 dark:text-zinc-200">${state.selectedFiles.length} File(s) Ready to Process</div>
+      <div class="text-[11px] text-zinc-400 mt-1">${errMsg || 'Visual preview ready'}</div>
     </div>
   `;
 }
@@ -1413,6 +1413,30 @@ window.rotateThumbnailCard = function(btn, event) {
   canvas.dataset.rotation = nextRotation;
   canvas.style.transform = `rotate(${nextRotation}deg)`;
   canvas.style.transition = 'transform 0.2s ease';
+};
+
+window.rotateAllThumbnailCards = function(angle = 90) {
+  const cards = document.querySelectorAll('#pagesThumbnailsGrid .page-thumbnail-card');
+  cards.forEach(card => {
+    const canvas = card.querySelector('canvas');
+    if (!canvas) return;
+    const currentRotation = parseInt(canvas.dataset.rotation || '0', 10);
+    const nextRotation = (currentRotation + angle) % 360;
+    canvas.dataset.rotation = nextRotation;
+    canvas.style.transform = `rotate(${nextRotation}deg)`;
+    canvas.style.transition = 'transform 0.2s ease';
+  });
+};
+
+window.resetAllThumbnailRotations = function() {
+  const cards = document.querySelectorAll('#pagesThumbnailsGrid .page-thumbnail-card');
+  cards.forEach(card => {
+    const canvas = card.querySelector('canvas');
+    if (!canvas) return;
+    canvas.dataset.rotation = 0;
+    canvas.style.transform = 'rotate(0deg)';
+    canvas.style.transition = 'transform 0.2s ease';
+  });
 };
 
 window.removeSelectedFile = function(index) {
@@ -1611,15 +1635,38 @@ function renderToolOptions(toolId) {
     `;
   } else if (toolId === 'organize') {
     elements.toolOptionsSection.innerHTML = `
-      <div class="space-y-2">
-        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">Rotate Document</label>
-        <select id="globalRotateSelect" class="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#272727] bg-white dark:bg-[#111111] text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-black dark:focus:border-white">
-          <option value="90">Rotate 90° CW</option>
-          <option value="180">Rotate 180°</option>
-          <option value="270">Rotate 270° CCW</option>
-        </select>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">Rotate All Pages</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="btnRotateAllCw" class="px-2.5 py-2 rounded-lg border border-zinc-200 dark:border-[#272727] hover:border-zinc-400 dark:hover:border-zinc-500 bg-white dark:bg-[#111111] text-xs font-medium text-zinc-800 dark:text-zinc-200 flex items-center justify-center space-x-1.5 transition tap-scale">
+              <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+              <span>Rotate +90°</span>
+            </button>
+            <button type="button" id="btnResetAllRotation" class="px-2.5 py-2 rounded-lg border border-zinc-200 dark:border-[#272727] hover:border-zinc-400 dark:hover:border-zinc-500 bg-white dark:bg-[#111111] text-xs font-medium text-zinc-500 dark:text-zinc-400 flex items-center justify-center space-x-1.5 transition tap-scale">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>Reset</span>
+            </button>
+          </div>
+        </div>
+        <p class="text-[11px] text-zinc-400 dark:text-zinc-500 leading-tight">
+          You can also rotate individual pages directly using the rotate button on each preview card.
+        </p>
       </div>
     `;
+
+    const btnAll = document.getElementById('btnRotateAllCw');
+    if (btnAll) {
+      btnAll.addEventListener('click', () => {
+        window.rotateAllThumbnailCards(90);
+      });
+    }
+    const btnReset = document.getElementById('btnResetAllRotation');
+    if (btnReset) {
+      btnReset.addEventListener('click', () => {
+        window.resetAllThumbnailRotations();
+      });
+    }
   } else if (toolId === 'jpg-to-pdf') {
     elements.toolOptionsSection.innerHTML = `
       <div class="space-y-2">

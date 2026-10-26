@@ -34,9 +34,9 @@ function imageToJpegDataUrl(file) {
 // 1. JPG / GAMBAR KE PDF (IMAGES TO PDF)
 // =============================================================================
 async function handleJpgToPdf({ files, updateProgress, showToast }) {
-  if (files.length === 0) throw new Error('Pilih minimal 1 berkas gambar.');
+  if (files.length === 0) throw new Error('Please select at least 1 image file.');
 
-  updateProgress(10, 'Mempersiapkan pembuatan dokumen PDF...');
+  updateProgress(10, 'Preparing PDF document generation...');
   const pdfDoc = await PDFLib.PDFDocument.create();
 
   // Read options from UI if available
@@ -50,7 +50,7 @@ async function handleJpgToPdf({ files, updateProgress, showToast }) {
   for (let i = 0; i < total; i++) {
     const file = files[i];
     const percent = Math.round(15 + ((i + 1) / total) * 70);
-    updateProgress(percent, `Mengonversi gambar ${i + 1} dari ${total}: ${file.name}...`);
+    updateProgress(percent, `Converting image ${i + 1} of ${total}: ${file.name}...`);
 
     // Normalize image to JPEG bytes
     const { dataUrl, width: imgWidth, height: imgHeight } = await imageToJpegDataUrl(file);
@@ -92,24 +92,24 @@ async function handleJpgToPdf({ files, updateProgress, showToast }) {
     });
   }
 
-  updateProgress(90, 'Menyusun berkas PDF akhir...');
+  updateProgress(90, 'Assembling final PDF document...');
   const pdfBytes = await pdfDoc.save();
 
-  const defaultName = `usemypdf_gambar_${Date.now()}.pdf`;
+  const defaultName = `usemypdf_images_${Date.now()}.pdf`;
   window.downloadFile(pdfBytes, defaultName);
 
-  updateProgress(100, 'Selesai! PDF berhasil diunduh.');
-  showToast(`${total} gambar berhasil diubah menjadi PDF!`, 'success');
+  updateProgress(100, 'Done! PDF downloaded successfully.');
+  showToast(`${total} image(s) converted to PDF successfully!`, 'success');
 }
 
 // =============================================================================
 // 2. PDF KE JPG / GAMBAR (PDF TO IMAGES WITH HD & ULTRA HD OPTIONS)
 // =============================================================================
 async function handlePdfToJpg({ files, updateProgress, showToast }) {
-  if (files.length === 0) throw new Error('Pilih 1 berkas PDF.');
+  if (files.length === 0) throw new Error('Please select 1 PDF file.');
   const file = files[0];
 
-  updateProgress(15, 'Membaca struktur halaman PDF...');
+  updateProgress(15, 'Reading PDF page structure...');
   const arrayBuffer = await file.arrayBuffer();
 
   const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
@@ -143,7 +143,7 @@ async function handlePdfToJpg({ files, updateProgress, showToast }) {
 
   if (numPages === 1) {
     // Single page download directly as image
-    updateProgress(50, `Merender halaman 1 resolusi ${qualityLabel} (${ext.toUpperCase()})...`);
+    updateProgress(50, `Rendering page 1 at ${qualityLabel} resolution (${ext.toUpperCase()})...`);
     const page = await pdfDocument.getPage(1);
     const viewport = page.getViewport({ scale });
 
@@ -161,21 +161,21 @@ async function handlePdfToJpg({ files, updateProgress, showToast }) {
     canvas.toBlob((blob) => {
       canvas.width = 0;
       canvas.height = 0;
-      window.downloadFile(blob, `${baseName}_hal_1_${qualityVal}.${ext}`, mimeType);
-      updateProgress(100, `Selesai! Gambar ${qualityLabel} berhasil diunduh.`);
+      window.downloadFile(blob, `${baseName}_page_1_${qualityVal}.${ext}`, mimeType);
+      updateProgress(100, `Done! ${qualityLabel} image downloaded successfully.`);
     }, mimeType, encoderQuality);
 
   } else {
     // Multiple pages: package all rendered images into a ZIP
     if (typeof JSZip === 'undefined') {
-      throw new Error('Komponen pengarsipan ZIP belum siap.');
+      throw new Error('ZIP packaging component not ready.');
     }
 
     const zip = new JSZip();
 
     for (let pageNum = 1; pageNum <= numPages; pageNum++) {
       const percent = Math.round(20 + (pageNum / numPages) * 65);
-      updateProgress(percent, `Merender lembar ${pageNum} dari ${numPages} (${qualityLabel})...`);
+      updateProgress(percent, `Rendering page ${pageNum} of ${numPages} (${qualityLabel})...`);
 
       const page = await pdfDocument.getPage(pageNum);
       const viewport = page.getViewport({ scale });
@@ -195,14 +195,14 @@ async function handlePdfToJpg({ files, updateProgress, showToast }) {
       canvas.height = 0;
       const base64Prefix = isPng ? /^data:image\/png;base64,/ : /^data:image\/jpeg;base64,/;
       const base64Data = pageDataUrl.replace(base64Prefix, '');
-      zip.file(`${baseName}_hal_${pageNum}_${qualityVal}.${ext}`, base64Data, { base64: true });
+      zip.file(`${baseName}_page_${pageNum}_${qualityVal}.${ext}`, base64Data, { base64: true });
     }
 
-    updateProgress(88, `Mengemas seluruh gambar ${qualityLabel} ke format .zip...`);
+    updateProgress(88, `Packaging all ${qualityLabel} images into .zip archive...`);
     const zipBlob = await zip.generateAsync({ type: 'blob' });
-    window.downloadFile(zipBlob, `${baseName}_${ext}_${qualityVal}_lengkap.zip`, 'application/zip');
+    window.downloadFile(zipBlob, `${baseName}_${ext}_${qualityVal}_complete.zip`, 'application/zip');
 
-    updateProgress(100, `Selesai! Berkas ZIP gambar ${qualityLabel} berhasil diunduh.`);
+    updateProgress(100, `Done! ZIP archive of ${qualityLabel} images downloaded successfully.`);
   }
 }
 

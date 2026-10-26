@@ -14,7 +14,7 @@ async function ensureXlsxLoaded() {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Gagal memuat library SheetJS untuk Excel. Periksa koneksi internet.'));
+    script.onerror = () => reject(new Error('Failed to load SheetJS library. Check internet connection.'));
     document.head.appendChild(script);
   });
 }
@@ -35,9 +35,9 @@ function sanitizeWinAnsi(str) {
 // 1. EXCEL KE PDF (EXCEL TO PDF - Supports Multi-file Merge & Convert)
 // =============================================================================
 async function handleExcelToPdf({ files, updateProgress, showToast }) {
-  if (files.length === 0) throw new Error('Pilih setidaknya 1 berkas spreadsheet Excel (.xlsx / .xls).');
+  if (files.length === 0) throw new Error('Please select at least 1 Excel spreadsheet (.xlsx / .xls).');
 
-  updateProgress(5, 'Menyiapkan modul Excel...');
+  updateProgress(5, 'Preparing Excel module...');
   await ensureXlsxLoaded();
 
   const pdfDoc = await PDFLib.PDFDocument.create();
@@ -59,7 +59,7 @@ async function handleExcelToPdf({ files, updateProgress, showToast }) {
   for (let fIdx = 0; fIdx < files.length; fIdx++) {
     const file = files[fIdx];
     const pct = Math.round(15 + ((fIdx / files.length) * 65));
-    updateProgress(pct, `Membaca spreadsheet (${fIdx + 1}/${files.length}): ${file.name}...`);
+    updateProgress(pct, `Reading spreadsheet (${fIdx + 1}/${files.length}): ${file.name}...`);
 
     const arrayBuffer = await file.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
@@ -86,7 +86,7 @@ async function handleExcelToPdf({ files, updateProgress, showToast }) {
           color: PDFLib.rgb(0.1, 0.1, 0.1)
         });
 
-        currentPage.drawText(`Halaman ${pageNum}`, {
+        currentPage.drawText(`Page ${pageNum}`, {
           x: pageWidth - margin - 70,
           y: margin / 2,
           size: 9,
@@ -154,10 +154,10 @@ async function handleExcelToPdf({ files, updateProgress, showToast }) {
   }
 
   if (pageNum === 0) {
-    throw new Error('Spreadsheet kosong atau tidak memiliki data.');
+    throw new Error('Spreadsheet is empty or has no data.');
   }
 
-  updateProgress(88, 'Menyimpan berkas PDF tabel...');
+  updateProgress(88, 'Saving PDF table document...');
   const pdfBytes = await pdfDoc.save();
 
   const outName = files.length > 1
@@ -165,21 +165,21 @@ async function handleExcelToPdf({ files, updateProgress, showToast }) {
     : `${files[0].name.replace(/\.[^/.]+$/, '')}_usemypdf.pdf`;
 
   window.downloadFile(pdfBytes, outName);
-  updateProgress(100, 'Selesai! Excel berhasil diubah ke PDF.');
-  showToast(files.length > 1 ? `${files.length} Excel berhasil digabung & dikonversi ke PDF!` : 'Excel berhasil dikonversi ke PDF!', 'success');
+  updateProgress(100, 'Done! Excel converted to PDF.');
+  showToast(files.length > 1 ? `${files.length} Excel files merged & converted to PDF!` : 'Excel converted to PDF successfully!', 'success');
 }
 
 // =============================================================================
 // 2. PDF KE EXCEL (PDF TO EXCEL)
 // =============================================================================
 async function handlePdfToExcel({ files, updateProgress, showToast }) {
-  if (files.length === 0) throw new Error('Pilih 1 berkas PDF.');
+  if (files.length === 0) throw new Error('Please select 1 PDF file.');
   const file = files[0];
 
-  updateProgress(10, 'Menyiapkan modul Excel...');
+  updateProgress(10, 'Preparing Excel module...');
   await ensureXlsxLoaded();
 
-  updateProgress(20, 'Menganalisis teks dan baris tabel di PDF...');
+  updateProgress(20, 'Analyzing text and table rows in PDF...');
   const arrayBuffer = await file.arrayBuffer();
 
   const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
@@ -190,7 +190,7 @@ async function handlePdfToExcel({ files, updateProgress, showToast }) {
 
   for (let pageNum = 1; pageNum <= numPages; pageNum++) {
     const percent = Math.round(15 + (pageNum / numPages) * 65);
-    updateProgress(percent, `Mengekstrak baris tabel halaman ${pageNum} dari ${numPages}...`);
+    updateProgress(percent, `Extracting table rows on page ${pageNum} of ${numPages}...`);
 
     const page = await pdfDoc.getPage(pageNum);
     const textContent = await page.getTextContent();
@@ -228,28 +228,28 @@ async function handlePdfToExcel({ files, updateProgress, showToast }) {
 
     // Add empty separator row between pages
     if (pageNum < numPages) {
-      allRows.push([`--- Akhir Halaman ${pageNum} ---`]);
+      allRows.push([`--- End of Page ${pageNum} ---`]);
     }
   }
 
-  updateProgress(85, 'Menyusun berkas spreadsheet Excel (.xlsx)...');
+  updateProgress(85, 'Assembling Excel spreadsheet (.xlsx)...');
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(allRows);
-  XLSX.utils.book_append_sheet(wb, ws, 'Ekstrak PDF');
+  XLSX.utils.book_append_sheet(wb, ws, 'PDF Extract');
 
   const xlsxBytes = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
   const baseName = file.name.replace(/\.[^/.]+$/, '');
   window.downloadFile(new Uint8Array(xlsxBytes), `${baseName}_usemypdf.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
-  updateProgress(100, 'Selesai! Berkas Excel berhasil diunduh.');
-  showToast('PDF berhasil diekstrak menjadi Excel (.xlsx)!', 'success');
+  updateProgress(100, 'Done! Excel spreadsheet downloaded successfully.');
+  showToast('PDF extracted to Excel (.xlsx) successfully!', 'success');
 }
 
 // =============================================================================
 // 3. WORD KE PDF (WORD TO PDF - Supports Multi-file Merge & Convert)
 // =============================================================================
 async function handleWordToPdf({ files, updateProgress, showToast }) {
-  if (files.length === 0) throw new Error('Pilih setidaknya 1 berkas Word (.docx).');
+  if (files.length === 0) throw new Error('Please select at least 1 Word document (.docx).');
 
   const pdfDoc = await PDFLib.PDFDocument.create();
   const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
@@ -274,7 +274,7 @@ async function handleWordToPdf({ files, updateProgress, showToast }) {
   for (let fIdx = 0; fIdx < files.length; fIdx++) {
     const file = files[fIdx];
     const pct = Math.round(15 + ((fIdx / files.length) * 65));
-    updateProgress(pct, `Membaca dokumen Word (${fIdx + 1}/${files.length}): ${file.name}...`);
+    updateProgress(pct, `Reading Word document (${fIdx + 1}/${files.length}): ${file.name}...`);
 
     const zip = await JSZip.loadAsync(file);
     const docXmlFile = zip.file('word/document.xml');
@@ -364,10 +364,10 @@ async function handleWordToPdf({ files, updateProgress, showToast }) {
   }
 
   if (pdfDoc.getPageCount() === 0) {
-    throw new Error('Tidak ada teks yang dapat dibaca dari berkas Word yang dipilih.');
+    throw new Error('No readable text found in selected Word file(s).');
   }
 
-  updateProgress(88, 'Menyimpan berkas PDF...');
+  updateProgress(88, 'Saving PDF file...');
   const pdfBytes = await pdfDoc.save();
 
   const outName = files.length > 1
@@ -375,18 +375,18 @@ async function handleWordToPdf({ files, updateProgress, showToast }) {
     : `${files[0].name.replace(/\.[^/.]+$/, '')}_usemypdf.pdf`;
 
   window.downloadFile(pdfBytes, outName);
-  updateProgress(100, 'Selesai! Word berhasil dikonversi ke PDF.');
-  showToast(files.length > 1 ? `${files.length} Word berhasil digabung & dikonversi ke PDF!` : 'Word berhasil diubah ke PDF!', 'success');
+  updateProgress(100, 'Done! Word converted to PDF.');
+  showToast(files.length > 1 ? `${files.length} Word files merged & converted to PDF!` : 'Word converted to PDF successfully!', 'success');
 }
 
 // =============================================================================
 // 4. PDF KE WORD (PDF TO WORD DOCX)
 // =============================================================================
 async function handlePdfToWord({ files, updateProgress, showToast }) {
-  if (files.length === 0) throw new Error('Pilih 1 berkas PDF.');
+  if (files.length === 0) throw new Error('Please select 1 PDF file.');
   const file = files[0];
 
-  updateProgress(20, 'Mengekstrak teks & paragraf dari PDF...');
+  updateProgress(20, 'Extracting text & paragraphs from PDF...');
   const arrayBuffer = await file.arrayBuffer();
 
   const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
@@ -397,7 +397,7 @@ async function handlePdfToWord({ files, updateProgress, showToast }) {
 
   for (let pageNum = 1; pageNum <= numPages; pageNum++) {
     const percent = Math.round(20 + (pageNum / numPages) * 60);
-    updateProgress(percent, `Membaca teks lembar ${pageNum} dari ${numPages}...`);
+    updateProgress(percent, `Reading text on page ${pageNum} of ${numPages}...`);
 
     const page = await pdfDoc.getPage(pageNum);
     const textContent = await page.getTextContent();
@@ -439,7 +439,7 @@ async function handlePdfToWord({ files, updateProgress, showToast }) {
     }
   }
 
-  updateProgress(85, 'Membangun berkas Word (.docx) murni...');
+  updateProgress(85, 'Building clean Word document (.docx)...');
   const zip = new JSZip();
 
   // OpenXML Core Structure
@@ -471,15 +471,15 @@ async function handlePdfToWord({ files, updateProgress, showToast }) {
   const baseName = file.name.replace(/\.[^/.]+$/, '');
   window.downloadFile(docxBlob, `${baseName}_usemypdf.docx`, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
 
-  updateProgress(100, 'Selesai! Berkas Word (.docx) berhasil diunduh.');
-  showToast('PDF berhasil dikonversi ke Word (.docx)!', 'success');
+  updateProgress(100, 'Done! Word document (.docx) downloaded successfully.');
+  showToast('PDF converted to Word (.docx) successfully!', 'success');
 }
 
 // =============================================================================
 // 5. POWERPOINT KE PDF (PPT TO PDF - Supports Multi-file Merge & Convert)
 // =============================================================================
 async function handlePptToPdf({ files, updateProgress, showToast }) {
-  if (files.length === 0) throw new Error('Pilih setidaknya 1 berkas presentasi (.pptx).');
+  if (files.length === 0) throw new Error('Please select at least 1 presentation file (.pptx).');
 
   const pdfDoc = await PDFLib.PDFDocument.create();
   const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
@@ -496,7 +496,7 @@ async function handlePptToPdf({ files, updateProgress, showToast }) {
   for (let fIdx = 0; fIdx < files.length; fIdx++) {
     const file = files[fIdx];
     const pct = Math.round(15 + ((fIdx / files.length) * 65));
-    updateProgress(pct, `Membaca slide PowerPoint (${fIdx + 1}/${files.length}): ${file.name}...`);
+    updateProgress(pct, `Reading PowerPoint slides (${fIdx + 1}/${files.length}): ${file.name}...`);
 
     const zip = await JSZip.loadAsync(file);
     const slidePaths = Object.keys(zip.files).filter(path => /^ppt\/slides\/slide\d+\.xml$/.test(path));
@@ -573,10 +573,10 @@ async function handlePptToPdf({ files, updateProgress, showToast }) {
   }
 
   if (totalSlidesCount === 0) {
-    throw new Error('Tidak ditemukan slide dalam berkas presentasi PowerPoint yang dipilih.');
+    throw new Error('No slides found in the selected PowerPoint file(s).');
   }
 
-  updateProgress(88, 'Menyimpan berkas presentasi PDF...');
+  updateProgress(88, 'Saving presentation PDF...');
   const pdfBytes = await pdfDoc.save();
 
   const outName = files.length > 1
@@ -584,18 +584,18 @@ async function handlePptToPdf({ files, updateProgress, showToast }) {
     : `${files[0].name.replace(/\.[^/.]+$/, '')}_usemypdf.pdf`;
 
   window.downloadFile(pdfBytes, outName);
-  updateProgress(100, 'Selesai! PowerPoint berhasil diubah ke PDF.');
-  showToast(files.length > 1 ? `${files.length} Presentasi berhasil digabung & dikonversi ke PDF!` : 'PowerPoint berhasil dikonversi ke PDF!', 'success');
+  updateProgress(100, 'Done! PowerPoint converted to PDF.');
+  showToast(files.length > 1 ? `${files.length} Presentations merged & converted to PDF!` : 'PowerPoint converted to PDF successfully!', 'success');
 }
 
 // =============================================================================
 // 6. PDF KE POWERPOINT (PDF TO PPTX)
 // =============================================================================
 async function handlePdfToPpt({ files, updateProgress, showToast }) {
-  if (files.length === 0) throw new Error('Pilih 1 berkas PDF.');
+  if (files.length === 0) throw new Error('Please select 1 PDF file.');
   const file = files[0];
 
-  updateProgress(15, 'Merender lembar dokumen PDF untuk slide presentasi...');
+  updateProgress(15, 'Rendering PDF pages for presentation slides...');
   const arrayBuffer = await file.arrayBuffer();
 
   const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
@@ -639,7 +639,7 @@ async function handlePdfToPpt({ files, updateProgress, showToast }) {
   // Render each page into slide image and slide XML
   for (let pageNum = 1; pageNum <= numPages; pageNum++) {
     const percent = Math.round(20 + (pageNum / numPages) * 65);
-    updateProgress(percent, `Membuat slide presentasi ${pageNum} dari ${numPages}...`);
+    updateProgress(percent, `Creating presentation slide ${pageNum} of ${numPages}...`);
 
     const page = await pdfDoc.getPage(pageNum);
     const viewport = page.getViewport({ scale: 1.8 }); // Sharp presentation image
@@ -694,7 +694,7 @@ async function handlePdfToPpt({ files, updateProgress, showToast }) {
 </Relationships>`);
   }
 
-  updateProgress(88, 'Mengemas berkas presentasi PowerPoint (.pptx)...');
+  updateProgress(88, 'Packaging PowerPoint presentation (.pptx)...');
   const pptxBlob = await zip.generateAsync({
     type: 'blob',
     mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
@@ -703,8 +703,8 @@ async function handlePdfToPpt({ files, updateProgress, showToast }) {
   const baseName = file.name.replace(/\.[^/.]+$/, '');
   window.downloadFile(pptxBlob, `${baseName}_usemypdf.pptx`, 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
 
-  updateProgress(100, 'Selesai! Berkas PowerPoint (.pptx) berhasil diunduh.');
-  showToast('PDF berhasil dikonversi ke PowerPoint (.pptx)!', 'success');
+  updateProgress(100, 'Done! PowerPoint presentation (.pptx) downloaded successfully.');
+  showToast('PDF converted to PowerPoint (.pptx) successfully!', 'success');
 }
 
 // Register Handlers to Global Object
